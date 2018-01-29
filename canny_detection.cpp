@@ -24,6 +24,10 @@ public:
 	int get_width(){
 		return x[1] - x[0];
 	}
+
+	int get_coordinateX(int n, int cols, int y){
+		return x[n] - (y * cols);
+	}
 };
 
 void find_kinoko(cv::Mat canny_img, std::vector<Kinoko> &obj){
@@ -50,18 +54,22 @@ void find_kinoko(cv::Mat canny_img, std::vector<Kinoko> &obj){
 	}
 }
 
-/*
-cv::Mat write_line(cv::Mat src_img, Kinoko kinoko){
-	int y = (int)(kinoko.x[0] / src_img.cols);
-	cv::line(src_img, cv::Point(kinoko.x[0], y), cv::Point(kinoko.x[1], y), cv::Scalar(0, 0, 200), 3, 4);
-
-	return src_img;
+void write_line(cv::Mat &img, Kinoko kinoko){
+	int y = (int)(kinoko.x[0] / img.cols);
+	int x0 = kinoko.get_coordinateX(0, img.cols, y);
+	int x1 = kinoko.get_coordinateX(1, img.cols, y);
+	std::cout << "y = " << y << std::endl;
+	std::cout << "x[0] = " << x0 << std::endl;
+	std::cout << "x[1] = " << x1 << std::endl;
+	//x[0],x[1]の値はidxなのでyで割る必要がある。
+	cv::line(img, cv::Point(x0, y), cv::Point(x1, y), cv::Scalar(0, 0, 200), 3, 4);
 }
-*/
+
 int main(int argc, char *argy[]){
 	//8, 43
-	cv::Mat src_img = cv::imread("C:\\file\\pos\\t_kinoko\\ (8).jpg");
-	
+	std::string fn = "C:\\file\\pos\\t_kinoko\\ (43).jpg";
+	cv::Mat src_img = cv::imread(fn);
+	cv::Mat original = cv::imread(fn);
 	if (src_img.empty()){
 		std::cout << "cannot open file" << std::endl;
 		return -1;
@@ -99,7 +107,7 @@ int main(int argc, char *argy[]){
 	でも怖いので、後でget_width()を改良しておく。*/
 	for (int i = 0; i < obj.size(); i++){
 		if (obj[i].x[1] != -1){
-			std::cout << i << "番目の幅 = " << obj[i].get_width() << std::endl;
+			//std::cout << i << "番目の幅 = " << obj[i].get_width() << std::endl;
 			if (obj[i].get_width() > max_width) {
 				max_width = obj[i].get_width();
 				max_idx = i;
@@ -109,15 +117,11 @@ int main(int argc, char *argy[]){
 	std::cout << "max_idx = " << max_idx << std::endl;
 	std::cout << "max_width = " << max_width << std::endl;
 
-	//src_img = write_line(src_img, obj[max_idx]);
-	int y = (int)(obj[max_idx].x[0] / src_img.cols);
-	std::cout << "y = " << y << std::endl;
-	//cv::line(src_img, cv::Point(obj[max_idx].x[0], y), cv::Point(obj[max_idx].x[1], y), cv::Scalar(0, 0, 200), 3, 4);
-	cv::line(src_img, cv::Point(obj[max_idx].x[0], y), cv::Point(obj[max_idx].x[1], y), cv::Scalar(0, 200, 0), 5, 8);
+	write_line(original, obj[max_idx]);
 
 	cv::namedWindow("color", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
 	cv::imshow("image", canny_img);
-	cv::imshow("color", src_img);
+	cv::imshow("color", original);
 	cv::waitKey(0);
 
 	cv::imwrite("C:\\file\\result\\kinoko1\\43.jpg", canny_img);
