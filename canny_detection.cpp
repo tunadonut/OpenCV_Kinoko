@@ -36,10 +36,13 @@ void find_kinoko(cv::Mat canny_img, std::vector<Kinoko> &obj){
 			int idx = y * canny_img.cols + x;
 
 			if (canny_img.data[idx] == BLACK && obj.back().x[0] == -1){
-				obj.back().x[0] = x;
+				obj.back().x[0] = idx;
+				//エッジの太さを検出しないようにする
+				x += 3;
 			}
 			else  if(canny_img.data[idx] == BLACK && obj.back().x[0] != -1){
-				obj.back().x[1] = x;
+				obj.back().x[1] = idx;
+				x += 3;
 				Kinoko kinoko;
 				obj.push_back(kinoko);
 			}
