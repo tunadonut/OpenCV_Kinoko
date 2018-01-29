@@ -49,6 +49,15 @@ void find_kinoko(cv::Mat canny_img, std::vector<Kinoko> &obj){
 		}
 	}
 }
+
+/*
+cv::Mat write_line(cv::Mat src_img, Kinoko kinoko){
+	int y = (int)(kinoko.x[0] / src_img.cols);
+	cv::line(src_img, cv::Point(kinoko.x[0], y), cv::Point(kinoko.x[1], y), cv::Scalar(0, 0, 200), 3, 4);
+
+	return src_img;
+}
+*/
 int main(int argc, char *argy[]){
 	//8, 43
 	cv::Mat src_img = cv::imread("C:\\file\\pos\\t_kinoko\\ (8).jpg");
@@ -80,6 +89,8 @@ int main(int argc, char *argy[]){
 	canny_img = ~canny_img;
 
 	std::vector<Kinoko> obj;
+	int max_idx = 0;
+	int max_width = 0;
 	find_kinoko(canny_img, obj);
 	/*é∏îsÇµÇΩÇ±Ç∆ÅB
 	if(canny_img.data[idx] == BLACK && obj.back().x[0] == -1)}else{}Ç∆èëÇ¢ÇƒÇµÇ‹Ç¡ÇΩÇ™ÅA
@@ -89,9 +100,24 @@ int main(int argc, char *argy[]){
 	for (int i = 0; i < obj.size(); i++){
 		if (obj[i].x[1] != -1){
 			std::cout << i << "î‘ñ⁄ÇÃïù = " << obj[i].get_width() << std::endl;
+			if (obj[i].get_width() > max_width) {
+				max_width = obj[i].get_width();
+				max_idx = i;
+			}
 		}
 	}
+	std::cout << "max_idx = " << max_idx << std::endl;
+	std::cout << "max_width = " << max_width << std::endl;
+
+	//src_img = write_line(src_img, obj[max_idx]);
+	int y = (int)(obj[max_idx].x[0] / src_img.cols);
+	std::cout << "y = " << y << std::endl;
+	//cv::line(src_img, cv::Point(obj[max_idx].x[0], y), cv::Point(obj[max_idx].x[1], y), cv::Scalar(0, 0, 200), 3, 4);
+	cv::line(src_img, cv::Point(obj[max_idx].x[0], y), cv::Point(obj[max_idx].x[1], y), cv::Scalar(0, 200, 0), 5, 8);
+
+	cv::namedWindow("color", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
 	cv::imshow("image", canny_img);
+	cv::imshow("color", src_img);
 	cv::waitKey(0);
 
 	cv::imwrite("C:\\file\\result\\kinoko1\\43.jpg", canny_img);
