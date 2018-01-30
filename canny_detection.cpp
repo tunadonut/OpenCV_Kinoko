@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <ostream>
+#include <vector>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
@@ -12,6 +13,7 @@ class Kinoko {
 public:
 	int x[2];
 	int y[2];
+	int length;
 
 	Kinoko(){
 		//座標が入るので正の数を入れない
@@ -19,6 +21,7 @@ public:
 		x[1] = -1;
 		y[0] = -1;
 		y[1] = -1;
+		length = 0;
 	}
 
 	int get_width(){
@@ -54,6 +57,22 @@ void find_kinoko(cv::Mat canny_img, std::vector<Kinoko> &obj){
 	}
 }
 
+void search_length(cv::Mat &img, Kinoko kinoko){
+
+}
+
+void search_black(cv::Mat &img, std::vector<Kinoko> &kinoko){
+	
+	for (int idx = 0; idx < (img.cols * img.rows); idx++){
+		if (img.data[idx] == BLACK) {
+			Kinoko obj;
+			kinoko.push_back(obj);
+			search_length(img, kinoko.back());
+		}
+	}
+}
+
+//横幅を書く（たぶん使わない）
 void write_line(cv::Mat &img, Kinoko kinoko){
 	int y = (int)(kinoko.x[0] / img.cols);
 	int x0 = kinoko.get_coordinateX(0, img.cols, y);
@@ -65,9 +84,10 @@ void write_line(cv::Mat &img, Kinoko kinoko){
 	cv::line(img, cv::Point(x0, y), cv::Point(x1, y), cv::Scalar(0, 0, 200), 3, 4);
 }
 
+
 int main(int argc, char *argy[]){
 	//8, 43
-	std::string fn = "C:\\file\\pos\\t_kinoko\\ (43).jpg";
+	std::string fn = "C:\\file\\pos\\t_kinoko\\ (8).jpg";
 	cv::Mat src_img = cv::imread(fn);
 	cv::Mat original = cv::imread(fn);
 	if (src_img.empty()){
@@ -95,16 +115,19 @@ int main(int argc, char *argy[]){
 	cv::bitwise_or(channels[0], channels[1], canny_img);
 	cv::bitwise_or(channels[2], canny_img, canny_img);
 	canny_img = ~canny_img;
+	cv::erode(canny_img, canny_img, cv::Mat(), cv::Point(-1, -1), 10);
+	cv::dilate(canny_img, canny_img, cv::Mat(), cv::Point(-1, -1), 5);
 
 	std::vector<Kinoko> obj;
 	int max_idx = 0;
 	int max_width = 0;
-	find_kinoko(canny_img, obj);
+	//find_kinoko(canny_img, obj);
 	/*失敗したこと。
 	if(canny_img.data[idx] == BLACK && obj.back().x[0] == -1)}else{}と書いてしまったが、
 	これだとelseに入ったときにcanny_img.data[idx] != BLACKを取ってしまうのでelseはちゃんと書くこと。
 	get_width()を使うときはx[1]に値が入っていないととんでもない数字になるのでif文でチェックする。
 	でも怖いので、後でget_width()を改良しておく。*/
+	/*
 	for (int i = 0; i < obj.size(); i++){
 		if (obj[i].x[1] != -1){
 			//std::cout << i << "番目の幅 = " << obj[i].get_width() << std::endl;
@@ -114,10 +137,11 @@ int main(int argc, char *argy[]){
 			}
 		}
 	}
-	std::cout << "max_idx = " << max_idx << std::endl;
-	std::cout << "max_width = " << max_width << std::endl;
+	*/
+	//std::cout << "max_idx = " << max_idx << std::endl;
+	//std::cout << "max_width = " << max_width << std::endl;
 
-	write_line(original, obj[max_idx]);
+	//write_line(original, obj[max_idx]);
 
 	cv::namedWindow("color", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
 	cv::imshow("image", canny_img);
