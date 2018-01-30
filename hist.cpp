@@ -1,75 +1,104 @@
 #include <iostream>
-#include <string>
 #include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>>
+#include <opencv2/imgproc.hpp>
 
 #pragma comment(lib, "opencv_world300d.lib")
 
-int main(int argc, char *argy[]){
-	cv::Mat src_img = cv::imread("C:\\file\\pos\\t_kinoko\\humika.jpg");
-	if (src_img.empty()){
-		std::cout << "開けない" << std::endl;
-		return -1;
-	}
-
-	std::vector<cv::Mat> channels(3);
-	cv::split(src_img, channels);
-	int r, g, b;
+class Hist {
+public:
 	int r_hist[256], g_hist[256], b_hist[256];
-	for (int i = 0; i < 256; i++){
-		r_hist[i] = 0;
-		g_hist[i] = 0;
-		b_hist[i] = 0;
-	}
+	int r_max, g_max, b_max;
+	float r_histf[256], g_histf[256], b_histf[256];
 
-	for (int y = 0; y < src_img.rows; y++){
-		for (int x = 0; x < src_img.cols; x++){
-			int idx = (y * src_img.cols + x) * src_img.channels();
-			b = channels[0].at<uchar>(y, x);
-			g = channels[1].at<uchar>(y, x);
-			r = channels[2].at<uchar>(y, x);
+	Hist(){
+		r_max = 0;
+		g_max = 0;
+		b_max = 0;
 
-			b_hist[b]++;
-			g_hist[g]++;
-			r_hist[r]++;
+		for (int i = 0; i < 256; i++){
+			r_hist[i] = 0;
+			g_hist[i] = 0;
+			b_hist[i] = 0;
 		}
 	}
+};
+//輝度値を数える
+void make_hist(cv::Mat src_img, Hist &hist){
+	int idx = 0;
+	int r, g, b;
+	for (int y = 0; y < src_img.rows; y++){
+		for (int x = 0; x < src_img.cols; x++){
+			idx = (y * src_img.cols + x) * src_img.channels();
+			b = src_img.data[idx];
+			g = src_img.data[idx + 1];
+			r = src_img.data[idx + 2];
+			hist.b_hist[b]++;
+			hist.g_hist[g]++;
+			hist.r_hist[r]++;
+		}
+	}
+}
 
-	//最大値を求める
-	int r_hist_max = 0, g_hist_max = 0, b_hist_max = 0;
+//ヒストグラムの最大値を求める
+void find_max_hist(Hist &hist){
+
 	for (int i = 0; i < 256; i++){
-		if (r_hist[i] > r_hist_max) r_hist_max = r_hist[i];
-		if (g_hist[i] > g_hist_max) g_hist_max = g_hist[i];
-		if (b_hist[i] > g_hist_max) b_hist_max = b_hist[i];
+		if (hist.r_hist[i] > hist.r_max) hist.r_max = hist.r_hist[i];
+		if (hist.g_hist[i] > hist.g_max) hist.g_max = hist.g_hist[i];
+		if (hist.b_hist[i] > hist.b_max) hist.b_max = hist.b_hist[i];
+	}
+}
 
-		std::cout << "r_hist[" << i << "] = " << r_hist[i] << std::endl;
-		std::cout << "g_hist[" << i << "] = " << g_hist[i] << std::endl;
-		std::cout << "b_hist[" << i << "] = " << b_hist[i] << std::endl;
+//最大値で正規化する
+void hist_normalize(Hist &hist){
+	for (int i = 0; i < 256; i++){
+		hist.r_histf[i] = hist.r_hist[i] / (float)hist.r_max;
+		hist.g_histf[i] = hist.g_hist[i] / (float)hist.g_max;
+		hist.b_histf[i] = hist.b_hist[i] / (float)hist.b_max;
+	}
+}
 
+//ヒストグラムを描画
+void draw_histogram(cv::Mat &hist_img, Hist hist){
+	int h = 100;
+	for (int i = 0; i < 256; i++){
+		cv::rectangle(hist_img, cv::Point(10 + i, 110), cv::Point(10 + i, 110 - (int)(hist.r_histf[i] * h)), cv::Scalar(0, 0, 255), 1, 8, 0);
+		cv::rectangle(hist_img, cv::Point(10 + i, 220), cv::Point(10 + i, 220 - (int)(hist.g_histf[i] * h)), cv::Scalar(0, 255, 0), 1, 8, 0);
+		cv::rectangle(hist_img, cv::Point(10 + i, 330), cv::Point(10 + i, 330 - (int)(hist.b_histf[i] * h)), cv::Scalar(255, 0, 0), 1, 8, 0);
+	}
+}
+int main(int argc, char *argy[]){
+	cv::Mat src_img = cv::imread("C:\\file\\pos\\t_kinoko\\ (8).jpg");
+	if (src_img.empty()){
+		std::cout << "開けませんでした" << std::endl;
 	}
 
-	float r_histf[256], g_histf[256], b_histf[256];
-	for (int i = 0; i < 256; i++){
-		r_histf[i] = r_hist[i] / (float)r_hist_max;
-		g_histf[i] = g_hist[i] / (float)g_hist_max;
-		b_histf[i] = b_hist[i] / (float)b_hist_max;
+	cv::Mat channels[3];
+	cv::split(src_img, channels);
 
-		std::cout << "r_histf = " << r_histf[i] << std::endl;
-		std::cout << "g_histf = " << r_histf[i] << std::endl;
-		std::cout << "b_histf = " << r_histf[i] << std::endl;
-	}
+	Hist hist;
 
-	cv::Mat hist_image = cv::Mat(cv::Size(276, 320), CV_8UC3, cv::Scalar(255, 255, 255));
-	for (int i = 0; i < 256; i++){
-		cv::line(hist_image, cv::Point(10 + i, 100), cv::Point(10 + i, 100 - (int)(r_histf[i] * 80)), cv::Scalar(0, 0, 255), 1, 8, 0);
-		cv::line(hist_image, cv::Point(10 + i, 200), cv::Point(10 + i, 200 - (int)(g_histf[i] * 80)), cv::Scalar(0, 255, 0), 1, 8, 0);
-		cv::line(hist_image, cv::Point(10 + i, 300), cv::Point(10 + i, 300 - (int)(b_histf[i] * 80)), cv::Scalar(255, 0, 0), 1, 8, 0);
-	}
-	cv::namedWindow("ヒストグラム");
-	cv::imshow("ヒストグラム", hist_image);
-	std::cout << "r_hist_max = " << r_hist_max << std::endl;
-	std::cout << "g_hist_max = " << r_hist_max << std::endl;
-	std::cout << "b_hist_max = " << r_hist_max << std::endl;
+	//輝度値を数える
+	make_hist(src_img, hist);
+
+	//ヒストグラムの最大値を求める
+	find_max_hist(hist);
+
+	/*最大値表示*/
+	std::cout << "r_hist_max = " << hist.r_max << std::endl;
+	std::cout << "g_hist_max = " << hist.g_max << std::endl;
+	std::cout << "b_hist_max = " << hist.b_max << std::endl;
+
+	//最大値で正規化
+	hist_normalize(hist);
+
+	//ヒストグラムを描く
+	cv::Mat hist_img = cv::Mat(cv::Size(276, 340), CV_8UC3, cv::Scalar(255, 255, 255));
+	draw_histogram(hist_img, hist);
+
+	cv::namedWindow("histogram");
+	cv::imshow("histogram", hist_img);
 	cv::waitKey(0);
+
 	return 0;
 }
