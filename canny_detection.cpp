@@ -87,7 +87,7 @@ void write_line(cv::Mat &img, Kinoko kinoko){
 
 int main(int argc, char *argy[]){
 	//8, 43
-	std::string fn = "C:\\file\\pos\\t_kinoko\\ (8).jpg";
+	std::string fn = "C:\\file\\pos\\t_kinoko\\ (11).jpg";
 	cv::Mat src_img = cv::imread(fn);
 	cv::Mat original = cv::imread(fn);
 	if (src_img.empty()){
@@ -148,6 +148,6 @@ int main(int argc, char *argy[]){
 	cv::imshow("color", original);
 	cv::waitKey(0);
 
-	cv::imwrite("C:\\file\\result\\kinoko1\\43.jpg", canny_img);
+	cv::imwrite("C:\\file\\result\\kinoko1\\11.jpg", canny_img);
 	return 0;
 }

@@ -9,8 +9,12 @@ class Hist {
 public:
 	int r_hist[256], g_hist[256], b_hist[256];
 	int r_max, g_max, b_max;
+
 	//正規化した輝度値を入れる配列
 	float r_histf[256], g_histf[256], b_histf[256];
+
+	//輝度値の確率分布
+	double r_hist_pd[256], g_hist_pd[256], b_hist_pd[256];
 
 	Hist(){
 		r_max = 0;
@@ -70,9 +74,21 @@ void draw_histogram(cv::Mat &hist_img, Hist hist){
 	}
 }
 
+//確率分布作成
+void make_pd(Hist &hist, int img_size){
+	double size = (double)img_size;
+	for (int i = 0; i < 256; i++){
+		hist.r_hist_pd[i] = hist.r_hist[i] / size;
+		hist.g_hist_pd[i] = hist.g_hist[i] / size;
+		hist.b_hist_pd[i] = hist.b_hist[i] / size;
+	}
+}
 /*メイン関数*/
 int main(int argc, char *argy[]){
-	cv::Mat src_img = cv::imread("C:\\file\\pos\\t_kinoko\\ (68).jpg");
+
+	cv::Mat src_img = cv::imread("C:\\file\\pos\\t_kinoko\\ (17).jpg");
+
+	//ファイルが開けたがチェック
 	if (src_img.empty()){
 		std::cout << "開けませんでした" << std::endl;
 	}
@@ -96,6 +112,8 @@ int main(int argc, char *argy[]){
 	//最大値で正規化
 	hist_normalize(hist);
 
+	//確率分布を作成
+	make_pd(hist, (src_img.cols * src_img.rows));
 	//ヒストグラムを描く
 	cv::Mat hist_img = cv::Mat(cv::Size(276, 340), CV_8UC3, cv::Scalar(255, 255, 255));
 	draw_histogram(hist_img, hist);
