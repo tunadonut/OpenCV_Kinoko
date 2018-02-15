@@ -123,22 +123,16 @@ void find_max_min(Hist &hist){
 
 //分散を計算する関数
 //cal_V(ヒストグラム, 下限, 上限)
-double cal_V(int hist[256], int min, int max){
-	double ave = 0.0;
+double cal_V(int hist[256], double m, int min, int max){
 	double ex2 = 0;
 	double result;
 
 	for (int i = min; i < max; i++){
-		ave += hist[i];
-		ex2 += std::pow(hist[i], 2.0);
+		ex2 += std::pow(hist[i] - m, 2.0);
 	}
 
 	int n = max - min;
-
-	ave = ave / n;
-	ex2 = ex2 / n;
-	result = ex2 - ave;
-
+	result = ex2 / n;
 	return result;
 }
 
@@ -154,13 +148,20 @@ double cal_average(int hist[256], int min, int max){
 	return result;
 }
 
+//ωを求める
+int count_omega(int hist[256], int min, int max){
+	int omega = 0;
+	for (int i = min; i < max; i++){
+		omega += hist[i];
+	}
+	return omega;
+}
+
 //大津の二値化
 //binarization_otsu(調べるヒストグラム, min, max)
 int binarization_otsu(int hist[256], double sig[2], int min, int max){
 
-	//クラス範囲
-	/*omega1 : min から t まで
-	　omega2 : t から max まで*/
+	//クラス画素数
 	int omega1, omega2;
 
 	//全体平均
@@ -186,21 +187,20 @@ int binarization_otsu(int hist[256], double sig[2], int min, int max){
 
 	/*大津の二値化を行う。*/
 	for (int t = min + 1; t < max; t++){
-		//分散を計算
-		sigma1 = cal_V(hist, min, t);
-		sigma2 = cal_V(hist, t, max);
-
-		//クラス内分散を計算
-		omega1 = t - min;
-		omega2 = max - t;
-		sigma_w = omega1 * sigma1 + omega2 * sigma2;
-		sigma_w = sigma_w / (omega1 + omega2);
-
 		//各平均値を求める
 		//黒クラス　m1
 		m1 = cal_average(hist, min, t);
 		//白クラス　m2
 		m2 = cal_average(hist, t, max);
+		//分散を計算
+		sigma1 = cal_V(hist, m1 ,min, t);
+		sigma2 = cal_V(hist, m2, t, max);
+
+		//クラス内分散を計算
+		omega1 = count_omega(hist, 0, t);
+		omega2 = count_omega(hist, t, 256);
+		sigma_w = omega1 * sigma1 + omega2 * sigma2;
+		sigma_w = sigma_w / (omega1 + omega2);
 
 		//クラス間分散
 		sigma_b = omega1 * std::pow(m1 - mt, 2.0) + omega2 * std::pow(m2 - mt, 2.0);
