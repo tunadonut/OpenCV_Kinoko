@@ -9,6 +9,10 @@ public:
 	//輝度値の数
 	int r_hist[256], g_hist[256], b_hist[256];
 
+	//ヒストグラムの開始と終了
+	//RGBの順番
+	int start[3], end[3];
+
 	//ヒストグラムの最大値
 	int r_hist_max, g_hist_max, b_hist_max;
 

@@ -75,4 +75,15 @@ void find_max_min(Hist &hist){
 	}
 }
 
+//ヒストグラムの開始と終わりを求める関数
+void find_start_end(int hist[256], int &start, int &end){
+	int count = 0;
+
+	for (int i = 0; i < 256; i++){
+		if (hist[i] != 0) start = i;
+	}
+	for (int i = 0; i < 256; i++){
+		if (hist[255 - i] != 0) end = 255 - i;
+	}
+}
 #endif //func_histogram_HPP
