@@ -5,6 +5,14 @@
 #include <opencv2/imgproc.hpp>
 #include "histogram_class.hpp"
 
+//表示用関数
+void printer(int value[3], std::string str){
+	std::cout << str << std::endl;
+	for (int i = 0; i < 3; i++){
+		std::cout << value[i] << std::endl;
+	}
+}
+
 //輝度値を数える
 void make_hist(cv::Mat src_img, Hist &hist){
 	int idx = 0;
@@ -15,29 +23,29 @@ void make_hist(cv::Mat src_img, Hist &hist){
 			b = src_img.data[idx];
 			g = src_img.data[idx + 1];
 			r = src_img.data[idx + 2];
-			hist.b_hist[b]++;
-			hist.g_hist[g]++;
-			hist.r_hist[r]++;
+			
+			hist.rgb_hist[0][r]++;
+			hist.rgb_hist[1][g]++;
+			hist.rgb_hist[2][b]++;
 		}
 	}
 }
 
 //ヒストグラムの最大値を求める
 void find_max_hist(Hist &hist){
-
-	for (int i = 0; i < 256; i++){
-		if (hist.r_hist[i] > hist.r_hist_max) hist.r_hist_max = hist.r_hist[i];
-		if (hist.g_hist[i] > hist.g_hist_max) hist.g_hist_max = hist.g_hist[i];
-		if (hist.b_hist[i] > hist.b_hist_max) hist.b_hist_max = hist.b_hist[i];
+	for (int i = 0; i < 3; i++){
+		for (int j = 0; j < 256; j++){
+			if (hist.rgb_hist[i][j] > hist.rgb_hist_max[i]) hist.rgb_hist_max[i] = hist.rgb_hist[i][j];
+		}
 	}
 }
 
 //最大値で正規化する
 void hist_normalize(Hist &hist){
-	for (int i = 0; i < 256; i++){
-		hist.r_histf[i] = hist.r_hist[i] / (float)hist.r_hist_max;
-		hist.g_histf[i] = hist.g_hist[i] / (float)hist.g_hist_max;
-		hist.b_histf[i] = hist.b_hist[i] / (float)hist.b_hist_max;
+	for (int i = 0; i < 3; i++){
+		for (int j = 0; j < 256; j++){
+			hist.rgb_histf[i][j] = hist.rgb_hist[i][j] / (float)hist.rgb_hist_max[i];
+		}
 	}
 }
 
@@ -45,33 +53,29 @@ void hist_normalize(Hist &hist){
 void draw_histogram(cv::Mat &hist_img, Hist hist){
 	int h = 100;
 	for (int i = 0; i < 256; i++){
-		cv::rectangle(hist_img, cv::Point(10 + i, 110), cv::Point(10 + i, 110 - (int)(hist.r_histf[i] * h)), cv::Scalar(0, 0, 255), 1, 8, 0);
-		cv::rectangle(hist_img, cv::Point(10 + i, 220), cv::Point(10 + i, 220 - (int)(hist.g_histf[i] * h)), cv::Scalar(0, 255, 0), 1, 8, 0);
-		cv::rectangle(hist_img, cv::Point(10 + i, 330), cv::Point(10 + i, 330 - (int)(hist.b_histf[i] * h)), cv::Scalar(255, 0, 0), 1, 8, 0);
+		cv::rectangle(hist_img, cv::Point(10 + i, 110), cv::Point(10 + i, 110 - (int)(hist.rgb_histf[0][i] * h)), cv::Scalar(0, 0, 255), 1, 8, 0);
+		cv::rectangle(hist_img, cv::Point(10 + i, 220), cv::Point(10 + i, 220 - (int)(hist.rgb_histf[1][i] * h)), cv::Scalar(0, 255, 0), 1, 8, 0);
+		cv::rectangle(hist_img, cv::Point(10 + i, 330), cv::Point(10 + i, 330 - (int)(hist.rgb_histf[2][i] * h)), cv::Scalar(255, 0, 0), 1, 8, 0);
 	}
 }
 
 //確率分布作成
 void make_pd(Hist &hist, int img_size){
 	double size = (double)img_size;
-	for (int i = 0; i < 256; i++){
-		hist.r_hist_pd[i] = hist.r_hist[i] / size;
-		hist.g_hist_pd[i] = hist.g_hist[i] / size;
-		hist.b_hist_pd[i] = hist.b_hist[i] / size;
+	for (int i = 0; i < 3; i++){
+		for (int j = 0; j < 256; j++){
+			hist.rgb_hist_pd[i][j] = hist.rgb_hist[i][j] / size;
+		}
 	}
 }
 
 //輝度値の最大最小値を求める関数
 void find_max_min(Hist &hist){
-	for (int i = 0; i < 256; i++){
-		//最大値
-		if (hist.r_hist[i] != 0 && i > hist.r_max) hist.r_max = i;
-		if (hist.g_hist[i] != 0 && i > hist.g_max) hist.g_max = i;
-		if (hist.b_hist[i] != 0 && i > hist.b_max) hist.b_max = i;
-		//最小値
-		if (hist.r_hist[i] != 0 && i < hist.r_min) hist.r_min = i;
-		if (hist.g_hist[i] != 0 && i < hist.g_min) hist.g_min = i;
-		if (hist.b_hist[i] != 0 && i < hist.b_min) hist.b_min = i;
+	for (int i = 0; i < 3; i++){
+		for (int j = 0; j < 256; j++){
+			if (hist.rgb_hist[i][j] > 0 && j > hist.rgb_max[i]) hist.rgb_max[i] = j;
+			if (hist.rgb_hist[i][j] > 0 && j < hist.rgb_min[i]) hist.rgb_min[i] = j;
+		}
 	}
 }
 
@@ -85,5 +89,10 @@ void find_start_end(int hist[256], int &start, int &end){
 	for (int i = 0; i < 256; i++){
 		if (hist[255 - i] != 0) end = 255 - i;
 	}
+}
+
+//クラス間エッジ強度の期待値
+void cal_edge_strength(Hist hist){
+	
 }
 #endif //func_histogram_HPP

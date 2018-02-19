@@ -38,10 +38,7 @@ int main(int argc, char *argy[]){
 	find_max_hist(hist);
 
 	/*ヒストグラムの最大値表示*/
-	std::cout << "ヒストグラムの最大値" << std::endl;
-	std::cout << "r_hist_max = " << hist.r_hist_max << std::endl;
-	std::cout << "g_hist_max = " << hist.g_hist_max << std::endl;
-	std::cout << "b_hist_max = " << hist.b_hist_max << std::endl;
+	printer(hist.rgb_hist_max, "ヒストグラムの最大値表示");
 
 	//最大値で正規化
 	hist_normalize(hist);
@@ -55,19 +52,16 @@ int main(int argc, char *argy[]){
 
 	//輝度値の最大最小値を求める
 	find_max_min(hist);
-	std::cout << "輝度値の最大、最小" << std::endl;
-	std::cout << "r_max = " << hist.r_max << "  r_min = " << hist.r_min << std::endl;
-	std::cout << "g_max = " << hist.g_max << "  g_min = " << hist.g_min << std::endl;
-	std::cout << "b_max = " << hist.b_max << "  b_min = " << hist.b_min << std::endl;
+	printer(hist.rgb_max, "輝度値の最大");
+	printer(hist.rgb_min, "輝度値の最小");
 
 	//大津の二値化
-	hist.rt = otsu_binari(hist.r_hist, hist.r_min, hist.r_max);
-	hist.gt = otsu_binari(hist.g_hist, hist.g_min, hist.g_max);
-	hist.bt = otsu_binari(hist.b_hist, hist.b_min, hist.b_max);
+	for (int i = 0; i < 3; i++){
+		hist.rgb_threshold[i] = otsu_binari(hist.rgb_hist[i], hist.rgb_min[i], hist.rgb_max[i]);
+	}
+	printer(hist.rgb_threshold, "閾値RGB");
 
-	std::cout << "hist.rt = " << hist.rt << std::endl;
-	std::cout << "hist.gt = " << hist.gt << std::endl;
-	std::cout << "hist.bt = " << hist.bt << std::endl;
+	//クラス間エッジ強度の期待値
 
 	cv::namedWindow("histogram");
 	cv::namedWindow("src_img");
