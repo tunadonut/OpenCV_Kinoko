@@ -13,9 +13,9 @@ void printer(int value[3], std::string str){
 	}
 }
 
-//輝度値を数える
+//ヒストグラムの作成
 void make_hist(cv::Mat src_img, Hist &hist){
-	int idx = 0;
+	int idx = 0;//ピクセルの場所を入れる
 	int r, g, b;
 	for (int y = 0; y < src_img.rows; y++){
 		for (int x = 0; x < src_img.cols; x++){
@@ -81,8 +81,6 @@ void find_max_min(Hist &hist){
 
 //ヒストグラムの開始と終わりを求める関数
 void find_start_end(int hist[256], int &start, int &end){
-	int count = 0;
-
 	for (int i = 0; i < 256; i++){
 		if (hist[i] != 0) start = i;
 	}
@@ -93,6 +91,41 @@ void find_start_end(int hist[256], int &start, int &end){
 
 //クラス間エッジ強度の期待値
 void cal_edge_strength(Hist hist){
-	
+	double class1, class2;
+	double sigma = 0.0;
+	//画素数
+	int omega[2];
+
+	std::cout << "平均クラス間エッジ強度 [0] = 赤、[1] = 緑、[2] = 青です。" << std::endl;
+
+	for (int i = 0; i < 3; i++){
+		class1 = 0.0;
+		class2 = 0.0;
+		omega[0] = 0;
+		omega[1] = 0;
+		
+		//黒クラスの輝度値の合計、画素数の合計
+		for (int j = 0; j < hist.rgb_threshold[i]; j++){
+			class1 += (hist.rgb_hist[i][j] * j);
+			omega[0] += hist.rgb_hist[i][j];
+		}
+
+		//白クラスの輝度値の合計、画素数の合計
+		for (int j = hist.rgb_threshold[i]; j < 256; j++){
+			class2 += (hist.rgb_hist[i][j] * j);
+			omega[1] += hist.rgb_hist[i][j];
+		}
+		//黒クラスの平均
+		class1 = class1 / omega[0];
+		//白クラスの平均
+		class2 = class2 / omega[1];
+		//平均クラス間エッジ強度
+		sigma = class1 - class2;
+		if (sigma < 0){
+			sigma = sigma * -1;
+		}
+
+		std::cout << "平均クラス間エッジ強度[" << i << "] = " << sigma << std::endl;
+	}
 }
 #endif //func_histogram_HPP

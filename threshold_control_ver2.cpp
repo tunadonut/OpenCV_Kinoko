@@ -9,7 +9,7 @@
 
 int main(int argc, char *argy[]){
 
-	cv::Mat src_img = cv::imread("C:\\file\\pos\\t_kinoko\\ (8).jpg");
+	cv::Mat src_img = cv::imread("C:\\file\\pos\\t_kinoko\\ (43).jpg");
 	cv::Mat out_img;
 
 	//ファイルが開けたがチェック
@@ -31,7 +31,6 @@ int main(int argc, char *argy[]){
 
 	Hist hist;
 
-	//輝度値を数える
 	make_hist(out_img, hist);
 
 	//ヒストグラムの最大値を求める
@@ -61,7 +60,8 @@ int main(int argc, char *argy[]){
 	}
 	printer(hist.rgb_threshold, "閾値RGB");
 
-	//クラス間エッジ強度の期待値
+	//平均クラス間エッジ強度
+	cal_edge_strength(hist);
 
 	cv::namedWindow("histogram");
 	cv::namedWindow("src_img");
@@ -71,6 +71,6 @@ int main(int argc, char *argy[]){
 	cv::imshow("out_img", out_img);
 	cv::waitKey(0);
 
-	cv::imwrite("C:\\file\\result\\threshold_control\\?番処理あり.jpg", hist_img);
+	cv::imwrite("C:\\file\\result\\threshold_control\\59番前処理あり.jpg", hist_img);
 	return 0;
 }
