@@ -79,24 +79,12 @@ void find_max_min(Hist &hist){
 	}
 }
 
-//ヒストグラムの開始と終わりを求める関数
-void find_start_end(int hist[256], int &start, int &end){
-	for (int i = 0; i < 256; i++){
-		if (hist[i] != 0) start = i;
-	}
-	for (int i = 0; i < 256; i++){
-		if (hist[255 - i] != 0) end = 255 - i;
-	}
-}
-
 //クラス間エッジ強度の期待値
-void cal_edge_strength(Hist hist){
+void cal_edge_strength(Hist hist, int edge_stren[3]){
 	double class1, class2;
 	double sigma = 0.0;
 	//画素数
 	int omega[2];
-
-	std::cout << "平均クラス間エッジ強度 [0] = 赤、[1] = 緑、[2] = 青です。" << std::endl;
 
 	for (int i = 0; i < 3; i++){
 		class1 = 0.0;
@@ -105,13 +93,13 @@ void cal_edge_strength(Hist hist){
 		omega[1] = 0;
 		
 		//黒クラスの輝度値の合計、画素数の合計
-		for (int j = 0; j < hist.rgb_threshold[i]; j++){
+		for (int j = hist.rgb_min[i]; j < hist.rgb_threshold[i]; j++){
 			class1 += (hist.rgb_hist[i][j] * j);
 			omega[0] += hist.rgb_hist[i][j];
 		}
 
 		//白クラスの輝度値の合計、画素数の合計
-		for (int j = hist.rgb_threshold[i]; j < 256; j++){
+		for (int j = hist.rgb_threshold[i]; j < hist.rgb_max[i]; j++){
 			class2 += (hist.rgb_hist[i][j] * j);
 			omega[1] += hist.rgb_hist[i][j];
 		}
@@ -124,8 +112,7 @@ void cal_edge_strength(Hist hist){
 		if (sigma < 0){
 			sigma = sigma * -1;
 		}
-
-		std::cout << "平均クラス間エッジ強度[" << i << "] = " << sigma << std::endl;
+		edge_stren[i] = (int)sigma;
 	}
 }
 #endif //func_histogram_HPP

@@ -8,13 +8,17 @@
 #pragma comment(lib, "opencv_world300d.lib")
 
 int main(int argc, char *argy[]){
-
+	//C:\file\pos\t_kinoko
 	cv::Mat src_img = cv::imread("C:\\file\\pos\\t_kinoko\\ (43).jpg");
 	cv::Mat out_img;
+
+	//cannyフィルタの閾値用変数
+	int rgb_canny_threshold[3];
 
 	//ファイルが開けたがチェック
 	if (src_img.empty()){
 		std::cout << "開けませんでした" << std::endl;
+		return -1;
 	}
 
 	//前処理
@@ -24,10 +28,6 @@ int main(int argc, char *argy[]){
 
 	//test
 	//DiscriminantAnalysis(src_img, src_img.rows, src_img.cols);
-
-	//チャンネル分け
-	cv::Mat channels[3];
-	cv::split(out_img, channels);
 
 	Hist hist;
 
@@ -61,16 +61,42 @@ int main(int argc, char *argy[]){
 	printer(hist.rgb_threshold, "閾値RGB");
 
 	//平均クラス間エッジ強度
-	cal_edge_strength(hist);
+	cal_edge_strength(hist, hist.edge_stren);
+	printer(hist.edge_stren, "平均クラス間エッジ強度 RGB順");
+
+	cv::Mat channels[3];
+	cv::split(out_img, channels);
+	/*
+	エッジ検出感度
+	上げるとより細かくエッジを検出する。
+	下げるとより大きなエッジを検出する。
+	*/
+	double sensitivity = 0.6;
+	for (int i = 0; i < 3; i++){
+		int t1 = (int)(hist.edge_stren[i] * sensitivity);
+		int t3 = (int)(hist.edge_stren[i] * sensitivity + hist.edge_stren[i]);
+		if (t3 > 256){
+			t3 = 255;
+		}
+		cv::Canny(channels[i], channels[i], t1, t3, 3);
+	}
+
+	cv::Mat canny_img;
+	cv::bitwise_or(channels[0], channels[1], canny_img);
+	cv::bitwise_or(channels[2], canny_img, canny_img);
+	canny_img = ~canny_img;
 
 	cv::namedWindow("histogram");
 	cv::namedWindow("src_img");
 	cv::namedWindow("out_img");
+	cv::namedWindow("canny_img");
 	cv::imshow("histogram", hist_img);
 	cv::imshow("src_img", src_img);
 	cv::imshow("out_img", out_img);
+	cv::imshow("canny_img", canny_img);
 	cv::waitKey(0);
 
 	cv::imwrite("C:\\file\\result\\threshold_control\\59番前処理あり.jpg", hist_img);
+
 	return 0;
 }
