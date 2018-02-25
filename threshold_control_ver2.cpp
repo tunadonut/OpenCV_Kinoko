@@ -1,16 +1,27 @@
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include "histogram_class.hpp"
 #include "func_histogram.hpp"
 #include "otsu_binarization.hpp"
 
-#pragma comment(lib, "opencv_world300d.lib")
+#pragma comment(lib, "opencv_world340.lib")
 
 int main(int argc, char *argy[]){
+	int num;
+	std::cout << "ファイル番号 : ";
+	std::cin >> num;
+	std::ostringstream ss;
+	ss << num;
+
+	std::string fn = "C:\\file\\pos\\t_kinoko\\(" + ss.str() + ").jpg";
+	std::cout << fn << std::endl;
 	//C:\file\pos\t_kinoko
-	cv::Mat src_img = cv::imread("C:\\file\\pos\\t_kinoko\\ (43).jpg");
-	cv::Mat out_img;
+	//fn = "C:\\file\\pos\\anime\\samidare.jpg";
+	cv::Mat src_img = cv::imread(fn);
+	cv::Mat out_img = cv::imread(fn);
 
 	//cannyフィルタの閾値用変数
 	int rgb_canny_threshold[3];
@@ -22,10 +33,13 @@ int main(int argc, char *argy[]){
 	}
 
 	//前処理
-	cv::erode(src_img, out_img, cv::Mat(), cv::Point(-1, -1), 2);
-	cv::dilate(out_img, out_img, cv::Mat(), cv::Point(-1, -1), 2);
-	cv::GaussianBlur(out_img, out_img, cv::Size(9, 7), 10, 10);
-
+	for (int i = 0; i < 5; i++) {
+		cv::erode(out_img, out_img, cv::Mat(), cv::Point(-1, -1), 2);
+		cv::dilate(out_img, out_img, cv::Mat(), cv::Point(-1, -1), 2);
+		if (i % 2 == 0) {
+			cv::GaussianBlur(out_img, out_img, cv::Size(3, 3), 10, 10);
+		}
+	}
 	//test
 	//DiscriminantAnalysis(src_img, src_img.rows, src_img.cols);
 
@@ -71,10 +85,10 @@ int main(int argc, char *argy[]){
 	上げるとより細かくエッジを検出する。
 	下げるとより大きなエッジを検出する。
 	*/
-	double sensitivity = 0.6;
+	double sensitivity = 2.0;
 	for (int i = 0; i < 3; i++){
-		int t1 = (int)(hist.edge_stren[i] * sensitivity);
-		int t3 = (int)(hist.edge_stren[i] * sensitivity + hist.edge_stren[i]);
+		int t1 = (int)(hist.edge_stren[i] / sensitivity);
+		int t3 = (int)(hist.edge_stren[i] / sensitivity + hist.edge_stren[i]);
 		if (t3 > 256){
 			t3 = 255;
 		}
@@ -85,7 +99,7 @@ int main(int argc, char *argy[]){
 	cv::bitwise_or(channels[0], channels[1], canny_img);
 	cv::bitwise_or(channels[2], canny_img, canny_img);
 	canny_img = ~canny_img;
-
+	cv::erode(canny_img, canny_img, cv::Mat(), cv::Point(-1, -1), 1);
 	cv::namedWindow("histogram");
 	cv::namedWindow("src_img");
 	cv::namedWindow("out_img");
