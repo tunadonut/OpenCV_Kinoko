@@ -33,13 +33,12 @@ int main(int argc, char *argy[]){
 	}
 
 	//‘Oˆ—
+	cv::GaussianBlur(out_img, out_img, cv::Size(5, 5), 10, 10);
 	for (int i = 0; i < 5; i++) {
 		cv::erode(out_img, out_img, cv::Mat(), cv::Point(-1, -1), 2);
 		cv::dilate(out_img, out_img, cv::Mat(), cv::Point(-1, -1), 2);
-		if (i % 2 == 0) {
-			cv::GaussianBlur(out_img, out_img, cv::Size(3, 3), 10, 10);
-		}
 	}
+	cv::GaussianBlur(out_img, out_img, cv::Size(3, 3), 10, 10);
 	//test
 	//DiscriminantAnalysis(src_img, src_img.rows, src_img.cols);
 
@@ -99,7 +98,7 @@ int main(int argc, char *argy[]){
 	cv::bitwise_or(channels[0], channels[1], canny_img);
 	cv::bitwise_or(channels[2], canny_img, canny_img);
 	canny_img = ~canny_img;
-	cv::erode(canny_img, canny_img, cv::Mat(), cv::Point(-1, -1), 1);
+	cv::erode(canny_img, canny_img, cv::Mat(), cv::Point(-1, -1), 2);
 	cv::namedWindow("histogram");
 	cv::namedWindow("src_img");
 	cv::namedWindow("out_img");
